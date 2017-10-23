@@ -96,7 +96,12 @@ export default class PersonSummary extends Component {
 
     return (
       <div className="person-summary">
-        <h3>{this.getName(person, false)}</h3>
+        <h3>
+          {this.getName(person, false)} {' '}
+          <Button bsSize="xsmall" bsStyle="danger" onClick={this.props.deleteCurrentPerson}>
+            Delete
+          </Button>
+        </h3>
         {parents}
       </div>
     );

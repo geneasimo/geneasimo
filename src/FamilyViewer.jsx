@@ -22,6 +22,7 @@ export default class FamilyViewer extends Component {
     };
 
     this.addPerson = this.addPerson.bind(this);
+    this.deleteCurrentPerson = this.deleteCurrentPerson.bind(this);
   }
 
   setMinMaxNumbers() {
@@ -41,6 +42,15 @@ export default class FamilyViewer extends Component {
   addPerson(number, firstName, lastName) {
     this.props.family.push({ ...{ number, firstName, lastName } });
     this.setMinMaxNumbers();
+    this.forceUpdate();
+  }
+
+  deleteCurrentPerson() {
+    const { family } = this.props;
+    const index = family.indexOf(this.state.currentPerson);
+    family.splice(index, 1);
+    this.setMinMaxNumbers();
+    this.setState({ currentPerson: this.findPersonByNumber(this.minNumber) });
     this.forceUpdate();
   }
 
@@ -82,6 +92,7 @@ export default class FamilyViewer extends Component {
             family={sortedPeople}
             onClick={number => this.handleClick(number)}
             addPerson={this.addPerson}
+            deleteCurrentPerson={this.deleteCurrentPerson}
           />
         </Col>
       </Grid>
