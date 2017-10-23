@@ -15,14 +15,19 @@ export default class FamilyViewer extends Component {
   constructor(props) {
     super(props);
 
-    const numbers = map(props.family, p => p.number);
-    this.minNumber = min(numbers);
-    this.maxNumber = max(numbers);
-
+    this.setMinMaxNumbers();
     this.state = {
       currentPerson: this.findPersonByNumber(this.minNumber),
       sortedBy: SORT_BY_AHNEN,
     };
+
+    this.addPerson = this.addPerson.bind(this);
+  }
+
+  setMinMaxNumbers() {
+    const numbers = map(this.props.family, p => p.number);
+    this.minNumber = min(numbers);
+    this.maxNumber = max(numbers);
   }
 
   findPersonByNumber(number) {
@@ -31,6 +36,12 @@ export default class FamilyViewer extends Component {
 
   handleClick(number) {
     this.setState({ currentPerson: this.findPersonByNumber(number) });
+  }
+
+  addPerson(number, firstName, lastName) {
+    this.props.family.push({ ...{ number, firstName, lastName } });
+    this.setMinMaxNumbers();
+    this.forceUpdate();
   }
 
   render() {
@@ -52,11 +63,12 @@ export default class FamilyViewer extends Component {
 
     return (
       <Grid fluid>
-        <Col md={2}>
+        <Col md={3}>
           <DropdownButton
             title={`Sort ${sortOptions[this.state.sortedBy]}`}
             id="sort-dropdown"
             onSelect={sortedBy => this.setState({ sortedBy })}
+            bsSize="small"
           >
             {map(sortOptions, (text, sortedBy) => (
               <MenuItem key={sortedBy} eventKey={sortedBy}>{text}</MenuItem>
@@ -64,11 +76,12 @@ export default class FamilyViewer extends Component {
           </DropdownButton>
           <ol className="family-tree">{people}</ol>
         </Col>
-        <Col md={10}>
+        <Col md={9}>
           <PersonSummary
             person={this.state.currentPerson}
             family={sortedPeople}
             onClick={number => this.handleClick(number)}
+            addPerson={this.addPerson}
           />
         </Col>
       </Grid>

@@ -1,0 +1,50 @@
+body {
+    font-family: monospace;
+    font-size: 16px;
+    padding-top: 20px;
+}
+
+.family-tree {
+    padding-left: 0;
+    padding-top: 20px;
+
+    & li {
+        list-style-type: none;
+        padding-bottom: 5px;
+    }
+}
+
+.name:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.current {
+    font-weight: bold;
+}
+
+.person-summary {
+    border-left: 1px solid #ccc;
+    padding-left: 50px;
+}
+
+.parent {
+    padding-bottom: 10px;
+}
+
+.no-form {
+    &.Father { padding-top: 2px; }
+    &.Mother { padding-top: 3px; }
+}
+
+.relationship {
+    font-weight: normal;
+}
+
+.input-xs {
+    border-radius: 3px;
+    font-size: 12px;
+    height: 22px;
+    line-height: 1.5;
+    padding: 2px 5px;
+}
