@@ -22,7 +22,7 @@ export default class FamilyViewer extends Component {
     };
 
     this.addPerson = this.addPerson.bind(this);
-    this.deleteCurrentPerson = this.deleteCurrentPerson.bind(this);
+    this.deletePerson = this.deletePerson.bind(this);
   }
 
   setMinMaxNumbers() {
@@ -45,9 +45,9 @@ export default class FamilyViewer extends Component {
     this.forceUpdate();
   }
 
-  deleteCurrentPerson() {
+  deletePerson(person) {
     const { family } = this.props;
-    const index = family.indexOf(this.state.currentPerson);
+    const index = family.indexOf(person);
     family.splice(index, 1);
     this.setMinMaxNumbers();
     this.setState({ currentPerson: this.findPersonByNumber(this.minNumber) });
@@ -87,13 +87,15 @@ export default class FamilyViewer extends Component {
           <ol className="family-tree">{people}</ol>
         </Col>
         <Col md={9}>
-          <PersonSummary
-            person={this.state.currentPerson}
-            family={sortedPeople}
-            onClick={number => this.handleClick(number)}
-            addPerson={this.addPerson}
-            deleteCurrentPerson={this.deleteCurrentPerson}
-          />
+          {this.state.currentPerson &&
+            <PersonSummary
+              person={this.state.currentPerson}
+              family={sortedPeople}
+              onClick={number => this.handleClick(number)}
+              addPerson={this.addPerson}
+              deletePerson={this.deletePerson}
+            />
+          }
         </Col>
       </Grid>
     );

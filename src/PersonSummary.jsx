@@ -1,6 +1,8 @@
-import { find, map } from 'lodash';
+import { filter, find, map } from 'lodash';
 import React, { Component } from 'react';
-import { Button, ControlLabel, Form, FormControl, FormGroup } from 'react-bootstrap';
+import { ControlLabel, Form, FormGroup } from 'react-bootstrap';
+import TinyButton from './helpers/TinyButton';
+import TinyTextInput from './helpers/TinyTextInput';
 
 const initialState = {
   isEditingFather: false,
@@ -14,6 +16,7 @@ export default class PersonSummary extends Component {
     super(props);
     this.state = initialState;
     this.addPerson = this.addPerson.bind(this);
+    this.deletePerson = this.deletePerson.bind(this);
   }
 
   componentWillReceiveProps() {
@@ -33,6 +36,15 @@ export default class PersonSummary extends Component {
     );
   }
 
+  getAncestors(person) {
+    const toBinary = int => int.toString(2);
+    const binaryNumber = toBinary(person.number);
+    return filter(
+      this.props.family,
+      p => toBinary(p.number).startsWith(binaryNumber),
+    );
+  }
+
   getForm(relationship) {
     const isEditingState = `isEditing${relationship}`;
     const isEditing = this.state[isEditingState];
@@ -41,18 +53,16 @@ export default class PersonSummary extends Component {
       : () => this.setState({ [isEditingState]: true });
 
     const [firstNameInput, lastNameInput] = map(nameParts, namePart => (
-      <FormControl
-        type="text"
+      <TinyTextInput
         placeholder={`${namePart} name`}
         inputRef={(input) => { this[`${relationship}${namePart}NameInput`] = input; }}
-        className="input-xs"
       />
     ));
-    const addButton = <Button {...{ onClick }} bsSize="xsmall">Add</Button>;
+    const addButton = <TinyButton {...{ onClick }}>Add</TinyButton>;
     const cancelButton = (
-      <Button onClick={() => this.setState({ [isEditingState]: false })} bsSize="xsmall">
+      <TinyButton onClick={() => this.setState({ [isEditingState]: false })}>
         Cancel
-      </Button>
+      </TinyButton>
     );
 
     return (
@@ -77,6 +87,16 @@ export default class PersonSummary extends Component {
     this.props.addPerson(number, firstName, lastName);
   }
 
+  deletePerson(person, deleteAncestors = false) {
+    const { deletePerson } = this.props;
+    deletePerson(person);
+    if (deleteAncestors) {
+      this.getAncestors(person).forEach(ancestor => (
+        deletePerson(ancestor)
+      ));
+    }
+  }
+
   render() {
     const { family, person } = this.props;
     const parents = map(['Father', 'Mother'], (relationship) => {
@@ -98,9 +118,20 @@ export default class PersonSummary extends Component {
       <div className="person-summary">
         <h3>
           {this.getName(person, false)} {' '}
-          <Button bsSize="xsmall" bsStyle="danger" onClick={this.props.deleteCurrentPerson}>
-            Delete
-          </Button>
+          <span onMouseLeave={() => this.setState({ isMouseInside: false })}>
+            <TinyButton
+              onMouseEnter={() => this.setState({ isMouseInside: true })}
+              bsStyle="danger"
+              onClick={() => this.deletePerson(person)}
+            >
+              Delete
+            </TinyButton> {' '}
+            { this.state.isMouseInside &&
+              <TinyButton bsStyle="danger" onClick={() => this.deletePerson(person, true)}>
+                Delete with ancestors
+              </TinyButton>
+            }
+          </span>
         </h3>
         {parents}
       </div>
