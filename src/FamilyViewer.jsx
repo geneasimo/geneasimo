@@ -1,7 +1,6 @@
-import { filter, find, isEqual, min, map, max, orderBy, startsWith } from 'lodash';
+import { filter, find, isEqual, min, map, max, orderBy, padStart, startsWith } from 'lodash';
 import React, { Component } from 'react';
 import { Col, DropdownButton, Grid, MenuItem } from 'react-bootstrap';
-import Person from './Person';
 import PersonSummary from './PersonSummary';
 
 const SORT_BY_ALPHA = 'alpha';
@@ -81,12 +80,13 @@ export default class FamilyViewer extends Component {
     const people = sortedPeople.map((person) => {
       const isCurrentPerson = person === this.state.currentPerson;
       const onClick = () => this.handleClick(person.number);
+      const className = `person${isCurrentPerson ? ' current' : ''}`;
+      const paddedNumber = padStart(person.number, this.state.maxNumber.toString().length, '\u00a0');
       return (
-        <Person
-          key={person.number}
-          {...{ ...person, isCurrentPerson, onClick }}
-          maxNumber={this.state.maxNumber}
-        />
+        <li key={person.number} {...{ className, onClick }}>
+          {paddedNumber}. {' '}
+          <span className="name">{person.lastName}, {person.firstName}</span>
+        </li>
       );
     });
 
