@@ -1,4 +1,4 @@
-import { find, min, map, max, orderBy } from 'lodash';
+import { filter, find, isEqual, min, map, max, orderBy, startsWith } from 'lodash';
 import React, { Component } from 'react';
 import { Col, DropdownButton, Grid, MenuItem } from 'react-bootstrap';
 import Person from './Person';
@@ -15,49 +15,68 @@ export default class FamilyViewer extends Component {
   constructor(props) {
     super(props);
 
-    this.setMinMaxNumbers();
+    const { minNumber, maxNumber } = this.getMinMaxNumbers(props.family);
     this.state = {
-      currentPerson: this.findPersonByNumber(this.minNumber),
+      family: props.family,
       sortedBy: SORT_BY_AHNEN,
+      currentPerson: this.findPersonByNumber(props.family, minNumber),
+      maxNumber,
     };
 
     this.addPerson = this.addPerson.bind(this);
     this.deletePerson = this.deletePerson.bind(this);
   }
 
-  setMinMaxNumbers() {
-    const numbers = map(this.props.family, p => p.number);
-    this.minNumber = min(numbers);
-    this.maxNumber = max(numbers);
+  onFamilyChange() {
+    const { family } = this.state;
+    const { minNumber, maxNumber } = this.getMinMaxNumbers(family);
+    this.setState({
+      currentPerson: this.findPersonByNumber(family, minNumber),
+      maxNumber,
+    });
   }
 
-  findPersonByNumber(number) {
-    return find(this.props.family, { number });
+  getMinMaxNumbers(family) {
+    const numbers = map(family, p => p.number);
+    return {
+      minNumber: min(numbers),
+      maxNumber: max(numbers),
+    };
+  }
+
+  findPersonByNumber(family, number) {
+    return find(family, { number });
   }
 
   handleClick(number) {
-    this.setState({ currentPerson: this.findPersonByNumber(number) });
+    this.setState({
+      currentPerson: this.findPersonByNumber(this.state.family, number),
+    });
   }
 
   addPerson(number, firstName, lastName) {
-    this.props.family.push({ ...{ number, firstName, lastName } });
-    this.setMinMaxNumbers();
-    this.forceUpdate();
+    const { family } = this.state;
+    family.push({ ...{ number, firstName, lastName } });
+    this.onFamilyChange();
   }
 
-  deletePerson(person) {
-    const { family } = this.props;
-    const index = family.indexOf(person);
-    family.splice(index, 1);
-    this.setMinMaxNumbers();
-    this.setState({ currentPerson: this.findPersonByNumber(this.minNumber) });
-    this.forceUpdate();
+  deletePerson(person, deleteAncestors = false) {
+    const { family } = this.state;
+    const toBinary = int => int.toString(2);
+    const binaryNumber = toBinary(person.number);
+
+    const condition = deleteAncestors ? startsWith : isEqual;
+    const ancestors = filter(family, p => condition(toBinary(p.number), binaryNumber));
+    ancestors.forEach((ancestor) => {
+      family.splice(family.indexOf(ancestor), 1);
+    });
+    this.onFamilyChange();
   }
 
   render() {
     const sortedByAhnen = this.state.sortedBy === SORT_BY_AHNEN;
     const fields = sortedByAhnen ? 'number' : ['lastName', 'firstName'];
-    const sortedPeople = orderBy(this.props.family, fields, 'asc');
+    const sortedPeople = orderBy(this.state.family, fields, 'asc');
 
     const people = sortedPeople.map((person) => {
       const isCurrentPerson = person === this.state.currentPerson;
@@ -66,7 +85,7 @@ export default class FamilyViewer extends Component {
         <Person
           key={person.number}
           {...{ ...person, isCurrentPerson, onClick }}
-          maxNumber={this.maxNumber}
+          maxNumber={this.state.maxNumber}
         />
       );
     });
@@ -90,10 +109,9 @@ export default class FamilyViewer extends Component {
           {this.state.currentPerson &&
             <PersonSummary
               person={this.state.currentPerson}
-              family={sortedPeople}
+              family={this.state.family}
               onClick={number => this.handleClick(number)}
               addPerson={this.addPerson}
-              deletePerson={this.deletePerson}
             />
           }
         </Col>

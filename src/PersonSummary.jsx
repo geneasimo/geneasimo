@@ -1,4 +1,4 @@
-import { filter, find, map } from 'lodash';
+import { find, map } from 'lodash';
 import React, { Component } from 'react';
 import { ControlLabel, Form, FormGroup } from 'react-bootstrap';
 import TinyButton from './helpers/TinyButton';
@@ -15,8 +15,6 @@ export default class PersonSummary extends Component {
   constructor(props) {
     super(props);
     this.state = initialState;
-    this.addPerson = this.addPerson.bind(this);
-    this.deletePerson = this.deletePerson.bind(this);
   }
 
   componentWillReceiveProps() {
@@ -36,15 +34,6 @@ export default class PersonSummary extends Component {
     );
   }
 
-  getAncestors(person) {
-    const toBinary = int => int.toString(2);
-    const binaryNumber = toBinary(person.number);
-    return filter(
-      this.props.family,
-      p => toBinary(p.number).startsWith(binaryNumber),
-    );
-  }
-
   getForm(relationship) {
     const isEditingState = `isEditing${relationship}`;
     const isEditing = this.state[isEditingState];
@@ -52,12 +41,19 @@ export default class PersonSummary extends Component {
       ? () => this.addPerson(relationship)
       : () => this.setState({ [isEditingState]: true });
 
-    const [firstNameInput, lastNameInput] = map(nameParts, namePart => (
-      <TinyTextInput
-        placeholder={`${namePart} name`}
-        inputRef={(input) => { this[`${relationship}${namePart}NameInput`] = input; }}
-      />
-    ));
+    const [firstNameInput, lastNameInput] = map(nameParts, (namePart) => {
+      const defaultValue = namePart === 'Last' && relationship === 'Father'
+        ? this.props.person.lastName : '';
+
+      return (
+        <TinyTextInput
+          placeholder={`${namePart} name`}
+          autoFocus={namePart === 'First'}
+          defaultValue={defaultValue}
+          inputRef={(input) => { this[`${relationship}${namePart}NameInput`] = input; }}
+        />
+      );
+    });
     const addButton = <TinyButton {...{ onClick }}>Add</TinyButton>;
     const cancelButton = (
       <TinyButton onClick={() => this.setState({ [isEditingState]: false })}>
@@ -87,16 +83,6 @@ export default class PersonSummary extends Component {
     this.props.addPerson(number, firstName, lastName);
   }
 
-  deletePerson(person, deleteAncestors = false) {
-    const { deletePerson } = this.props;
-    deletePerson(person);
-    if (deleteAncestors) {
-      this.getAncestors(person).forEach(ancestor => (
-        deletePerson(ancestor)
-      ));
-    }
-  }
-
   render() {
     const { family, person } = this.props;
     const parents = map(['Father', 'Mother'], (relationship) => {
@@ -122,12 +108,12 @@ export default class PersonSummary extends Component {
             <TinyButton
               onMouseEnter={() => this.setState({ isMouseInside: true })}
               bsStyle="danger"
-              onClick={() => this.deletePerson(person)}
+              onClick={() => this.props.deletePerson(person)}
             >
               Delete
             </TinyButton> {' '}
             { this.state.isMouseInside &&
-              <TinyButton bsStyle="danger" onClick={() => this.deletePerson(person, true)}>
+              <TinyButton bsStyle="danger" onClick={() => this.props.deletePerson(person, true)}>
                 Delete with ancestors
               </TinyButton>
             }
